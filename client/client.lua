@@ -12,6 +12,7 @@ RegisterNUICallback("flakey_multichar:selectCharacter", function(data, cb)
     local slot = data.slot
     if slot then
         TriggerServerEvent("flakeyCore:selectCharacter", slot)
+        TriggerEvent("flakey_spawnselector:openSpawnSelector")
         toggleNuiFrame(false)
         cb({ status = "ok" })
     else
