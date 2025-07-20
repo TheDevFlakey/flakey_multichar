@@ -70,48 +70,87 @@ const App: React.FC = () => {
 
   return (
     visible && (
-      <div className="flex h-screen text-white font-sans">
-        {/* Left Sidebar */}
-        <div className="w-1/4 p-4 bg-[#1f1f2b] border-r border-white/10 overflow-y-auto">
-          <h1 className="text-2xl font-bold mb-4">Characters</h1>
-          <div className="space-y-3">
-            {characters.map((char) => (
-              <div
-                key={char.cid}
-                onClick={() => {
-                  setSelected(char.cid);
-                  fetchNui("flakey_multichar:focusCharacter", {
-                    cid: char.cid,
-                  });
-                }}
-                className={`p-3 rounded-md cursor-pointer transition-all ${
-                  selected === char.cid
-                    ? "bg-violet-600 shadow-md"
-                    : "bg-violet-500/30 hover:bg-violet-500/50"
+      <div className="flex h-screen w-screen text-white font-sans">
+        {/* Sidebar */}
+        <div className="w-1/4 p-6 bg-[#12141b] border-r border-white/10 flex flex-col justify-between">
+          {/* Top: Characters List */}
+          <div>
+            <h1 className="text-3xl font-extrabold mb-6 tracking-tight">
+              Characters
+            </h1>
+            <div className="space-y-4 overflow-y-auto max-h-[75vh] pr-1">
+              {characters.map((char) => (
+                <div
+                  key={char.cid}
+                  onClick={() => {
+                    setSelected(char.cid);
+                    fetchNui("flakey_multichar:focusCharacter", {
+                      cid: char.cid,
+                    });
+                  }}
+                  className={`p-4 rounded-lg transition-all duration-200 cursor-pointer border ${
+                    selected === char.cid
+                      ? "bg-violet-600 border-violet-400 shadow-lg"
+                      : "bg-violet-500/20 hover:bg-violet-500/40 border-white/10"
+                  }`}
+                >
+                  <h2 className="text-lg font-semibold">{char.name}</h2>
+                  <p className="text-sm text-white/80">DOB: {char.dob}</p>
+                  <p className="text-sm text-white/80">Gender: {char.gender}</p>
+                  <p className="text-sm text-white/80">
+                    Height: {char.height} cm
+                  </p>
+                </div>
+              ))}
+
+              {characters.length < 6 && (
+                <div
+                  onClick={() => setShowCreate(true)}
+                  className="p-4 rounded-lg text-center bg-green-600 hover:bg-green-700 font-semibold cursor-pointer transition"
+                >
+                  + Create New Character
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Bottom: Select/Delete Controls */}
+          <div className="mt-6">
+            <h2 className="text-xl font-bold mb-2">Select Your Character</h2>
+            {selected !== null && (
+              <p className="text-white/60 text-sm mb-4">
+                Selected ID: <span className="font-semibold">{selected}</span>
+              </p>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={selectCharacter}
+                disabled={selected === null}
+                className={`flex-1 px-4 py-2 rounded-md text-sm uppercase font-bold border-2 transition-all tracking-wide ${
+                  selected === null
+                    ? "border-white/30 text-white/30 cursor-not-allowed"
+                    : "border-white hover:bg-white hover:text-black"
                 }`}
               >
-                <h2 className="text-lg font-semibold">{char.name}</h2>
-                <p className="text-sm text-white/80">DOB: {char.dob}</p>
-                <p className="text-sm text-white/80">Gender: {char.gender}</p>
-                <p className="text-sm text-white/80">
-                  Height: {char.height} cm
-                </p>
-              </div>
-            ))}
-
-            {characters.length < 6 && (
-              <div
-                onClick={() => setShowCreate(true)}
-                className="p-3 bg-green-600 hover:bg-green-700 text-center rounded-md font-semibold cursor-pointer"
+                Select
+              </button>
+              <button
+                onClick={() => handleDeleteRequest(selected)}
+                disabled={selected === null}
+                className={`flex-1 px-4 py-2 rounded-md text-sm uppercase font-bold border-2 transition-all tracking-wide ${
+                  selected === null
+                    ? "border-white/30 text-white/30 cursor-not-allowed"
+                    : "border-red-400 hover:bg-red-600 hover:border-red-500 hover:text-white"
+                }`}
               >
-                + Create New Character
-              </div>
-            )}
+                Delete
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col justify-center items-center px-12">
+        <div className="flex-1 flex justify-center items-center px-12 relative">
           {showCreate && (
             <CreateCharacter onClose={() => setShowCreate(false)} />
           )}
@@ -122,39 +161,6 @@ const App: React.FC = () => {
               onCancel={cancelDelete}
             />
           )}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4">Select Your Character</h1>
-            {selected !== null && (
-              <p className="text-white/70">
-                You have selected character ID: {selected}
-              </p>
-            )}
-          </div>
-
-          <div className="flex gap-4">
-            <button
-              onClick={selectCharacter}
-              disabled={selected === null}
-              className={`px-6 py-2 rounded-md uppercase font-bold border-2 transition-all ${
-                selected === null
-                  ? "border-white/30 text-white/30 cursor-not-allowed"
-                  : "border-white hover:bg-white hover:text-black"
-              }`}
-            >
-              Select
-            </button>
-            <button
-              onClick={() => handleDeleteRequest(selected)}
-              disabled={selected === null}
-              className={`px-6 py-2 rounded-md uppercase font-bold border-2 transition-all ${
-                selected === null
-                  ? "border-white/30 text-white/30 cursor-not-allowed"
-                  : "border-red-400 hover:bg-red-600 hover:border-red-600"
-              }`}
-            >
-              Delete
-            </button>
-          </div>
         </div>
       </div>
     )
