@@ -1,91 +1,91 @@
-/** @format */
-
-import React, { useState } from 'react';
-import { fetchNui } from '../utils/fetchNui';
+import React, { useState } from "react";
+import { fetchNui } from "../utils/fetchNui";
 
 interface Props {
-    onClose: () => void;
+  onClose: () => void;
 }
 
 const CreateCharacter: React.FC<Props> = ({ onClose }) => {
-    const [name, setName] = useState('');
-    const [dob, setDob] = useState('');
-    const [gender, setGender] = useState('male');
-    const [height, setHeight] = useState(180);
+  const [name, setName] = useState("");
+  const [dob, setDob] = useState("");
+  const [gender, setGender] = useState("male");
+  const [height, setHeight] = useState(180);
 
-    const handleSubmit = () => {
-        if (!name || !dob || !height) return;
+  const handleSubmit = () => {
+    if (!name || !dob || !height) return;
 
-        fetchNui('flakeyCore:createCharacter', {
-            name,
-            dob,
-            gender,
-            height,
-        });
+    fetchNui("flakeyCore:createCharacter", {
+      name,
+      dob,
+      gender,
+      height,
+    });
 
-        onClose();
-    };
+    onClose();
+  };
 
-    return (
-        <div className='fixed inset-0 bg-black/90 flex items-center justify-center z-50'>
-            <div className='border-2 border-dashed bg-red-200/20 p-6 rounded-sm w-full max-w-md space-y-4'>
-                <h2 className='text-2xl font-bold mb-2'>Create Character</h2>
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-[#1f1f2b] text-white p-6 rounded-xl w-full max-w-md space-y-5 shadow-lg border border-white/10">
+        <h2 className="text-2xl font-bold text-center text-blue-400">
+          Create Character
+        </h2>
 
-                <input
-                    type='text'
-                    placeholder='Full Name'
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className='w-full p-2 rounded bg-violet-200/20 text-white'
-                />
+        <input
+          type="text"
+          placeholder="Full Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full p-3 rounded-md bg-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
 
-                <input
-                    type='date'
-                    value={dob}
-                    onChange={(e) => setDob(e.target.value)}
-                    className='w-full p-2 rounded bg-violet-200/20 text-white'
-                />
+        <input
+          type="date"
+          value={dob}
+          onChange={(e) => setDob(e.target.value)}
+          className="w-full p-3 rounded-md bg-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
 
-                <select
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value)}
-                    className='w-full p-2 rounded bg-violet-200/20 text-white'
-                >
-                    <option value='male' className='bg-red-200/50 text-black'>
-                        Male
-                    </option>
-                    <option value='female' className='bg-red-200/50 text-black'>
-                        Female
-                    </option>
-                </select>
+        <select
+          value={gender}
+          onChange={(e) => setGender(e.target.value)}
+          className="w-full p-3 rounded-md bg-white/10 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+        >
+          <option value="male" className="text-black">
+            Male
+          </option>
+          <option value="female" className="text-black">
+            Female
+          </option>
+        </select>
 
-                <input
-                    type='number'
-                    value={height}
-                    onChange={(e) => setHeight(Number(e.target.value))}
-                    className='w-full p-2 rounded bg-violet-200/20 text-white'
-                    placeholder='Height (cm)'
-                    min={140}
-                    max={220}
-                />
+        <input
+          type="number"
+          value={height}
+          onChange={(e) => setHeight(Number(e.target.value))}
+          placeholder="Height (cm)"
+          min={140}
+          max={220}
+          className="w-full p-3 rounded-md bg-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
 
-                <div className='flex justify-end gap-3 pt-2'>
-                    <button
-                        onClick={onClose}
-                        className='text-sm font-bold uppercase border-2 border-white hover:border-red-200 hover:text-red-200 border-dashed px-4 py-2 rounded-sm hover:bg-white/20 cursor-pointer'
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        className='text-sm font-bold uppercase border-2 border-white hover:border-red-200 hover:text-red-200 border-dashed px-4 py-2 rounded-sm hover:bg-white/20 cursor-pointer'
-                    >
-                        Create
-                    </button>
-                </div>
-            </div>
+        <div className="flex justify-between gap-4 pt-2">
+          <button
+            onClick={onClose}
+            className="flex-1 px-5 py-2 rounded-md bg-white/10 hover:bg-white/20 text-white text-sm font-semibold transition border border-white/20"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="flex-1 px-5 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition border border-blue-400"
+          >
+            Create
+          </button>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default CreateCharacter;

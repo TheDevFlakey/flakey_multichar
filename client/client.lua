@@ -46,10 +46,23 @@ RegisterNUICallback("flakey_multichar:deleteCharacter", function(data, cb)
 end)
 
 RegisterNetEvent("flakey_multichar:characterDeleted", function(cid)
-    SendNUIMessage({
-        action = "characterDeleted",
-        cid = cid
-    })
+    SendReactMessage("characterDeleted", cid)
+    if CharacterList[cid] and DoesEntityExist(CharacterList[cid]) then
+        DeletePed(CharacterList[cid])
+        CharacterList[cid] = nil
+        if cam then
+            local firstCid = next(CharacterList)
+            if firstCid and CharacterList[firstCid] then
+                local ped = CharacterList[firstCid]
+                SetCamCoord(cam, GetOffsetFromEntityInWorldCoords(ped, 0.0, 2.0, 1.0))
+                PointCamAtEntity(cam, ped)
+            else
+                RenderScriptCams(false, false, 0, true, true)
+                DestroyCam(cam, false)
+                cam = nil
+            end
+        end
+    end
 end)
 
 RegisterNetEvent("flakey_multichar:characterCreated", function(success, cid)
@@ -63,16 +76,12 @@ end)
 
 RegisterNetEvent("flakey_multichar:showCreateCharacter", function()
     toggleNuiFrame(true)
-    SendNUIMessage({ action = "showCreateCharacter" })
+    SendReactMessage("showCreateCharacter")
 end)
 
 RegisterNetEvent("flakey_multichar:loadCharacters", function(characters)
     toggleNuiFrame(true)
-    SendNUIMessage({
-        action = "loadCharacters",
-        data = characters
-    })
-
+    SendReactMessage("loadCharacters", characters)
 
     -- Clean up old peds
     for _, ped in pairs(CharacterList) do

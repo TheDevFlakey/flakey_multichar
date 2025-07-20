@@ -72,10 +72,10 @@ const App: React.FC = () => {
     visible && (
       <div className="flex h-screen w-screen text-white font-sans">
         {/* Sidebar */}
-        <div className="w-1/4 p-6 bg-[#12141b] border-r border-white/10 flex flex-col justify-between">
+        <div className="w-1/4 p-6 pt-12 bg-[#12141b]/90 border-r border-white/10 flex flex-col justify-between">
           {/* Top: Characters List */}
           <div>
-            <h1 className="text-3xl font-extrabold mb-6 tracking-tight">
+            <h1 className="text-3xl font-extrabold mb-6 tracking-tight text-blue-400">
               Characters
             </h1>
             <div className="space-y-4 overflow-y-auto max-h-[75vh] pr-1">
@@ -90,8 +90,8 @@ const App: React.FC = () => {
                   }}
                   className={`p-4 rounded-lg transition-all duration-200 cursor-pointer border ${
                     selected === char.cid
-                      ? "bg-violet-600 border-violet-400 shadow-lg"
-                      : "bg-violet-500/20 hover:bg-violet-500/40 border-white/10"
+                      ? "bg-blue-500/80 border-blue-400 shadow-lg"
+                      : "bg-blue-400/10 hover:bg-blue-400/20 border-white/10"
                   }`}
                 >
                   <h2 className="text-lg font-semibold">{char.name}</h2>
@@ -103,10 +103,10 @@ const App: React.FC = () => {
                 </div>
               ))}
 
-              {characters.length < 6 && (
+              {characters.length < 5 && (
                 <div
                   onClick={() => setShowCreate(true)}
-                  className="p-4 rounded-lg text-center bg-green-600 hover:bg-green-700 font-semibold cursor-pointer transition"
+                  className="p-4 rounded-lg text-center bg-blue-500 hover:bg-blue-600 font-semibold cursor-pointer transition"
                 >
                   + Create New Character
                 </div>
@@ -116,7 +116,9 @@ const App: React.FC = () => {
 
           {/* Bottom: Select/Delete Controls */}
           <div className="mt-6">
-            <h2 className="text-xl font-bold mb-2">Select Your Character</h2>
+            <h2 className="text-xl font-bold mb-2 text-blue-400">
+              Select Your Character
+            </h2>
             {selected !== null && (
               <p className="text-white/60 text-sm mb-4">
                 Selected ID: <span className="font-semibold">{selected}</span>
@@ -129,7 +131,7 @@ const App: React.FC = () => {
                 className={`flex-1 px-4 py-2 rounded-md text-sm uppercase font-bold border-2 transition-all tracking-wide ${
                   selected === null
                     ? "border-white/30 text-white/30 cursor-not-allowed"
-                    : "border-white hover:bg-white hover:text-black"
+                    : "border-blue-400 hover:bg-blue-400 hover:text-black"
                 }`}
               >
                 Select
