@@ -1,142 +1,164 @@
-/** @format */
-
-import React, { useState } from 'react';
-import { fetchNui } from '../utils/fetchNui';
-import CreateCharacter from './CreateCharacter';
-import ConfirmModal from './ConfirmModel';
-import { useNuiEvent } from '../hooks/useNuiEvent';
+import React, { useState } from "react";
+import { fetchNui } from "../utils/fetchNui";
+import CreateCharacter from "./CreateCharacter";
+import ConfirmModal from "./ConfirmModel";
+import { useNuiEvent } from "../hooks/useNuiEvent";
 
 interface Character {
-    slot: number;
-    name: string;
-    dob: string;
-    gender: string;
-    height: number;
+  cid: number;
+  name: string;
+  dob: string;
+  gender: string;
+  height: number;
 }
 
 const App: React.FC = () => {
-    const [visible, setVisible] = useState(false);
-    const [characters, setCharacters] = useState<Character[]>([
-        { slot: 1, name: 'John Doe', dob: '1999-03-03' },
-        { slot: 2, name: 'Jane Smith', dob: '1998-05-15' },
-    ]);
-    const [selected, setSelected] = useState<number | null>(null);
-    const [showCreate, setShowCreate] = useState(false);
-    const [showConfirm, setShowConfirm] = useState(false);
-    const [pendingDeleteSlot, setPendingDeleteSlot] = useState<number | null>(null);
+  const [visible, setVisible] = useState(false);
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingDeleteCid, setPendingDeleteCid] = useState<number | null>(null);
 
-    useNuiEvent('setVisible', (isVisible: boolean) => {
-        setVisible(isVisible);
-    });
+  useNuiEvent("setVisible", (isVisible: boolean) => {
+    setVisible(isVisible);
+  });
 
-    useNuiEvent('loadCharacters', (chars: Character[]) => {
-        setCharacters(chars.map((c, i) => ({ ...c, slot: i + 1 })));
-        setVisible(true);
-        setShowCreate(false);
-    });
+  useNuiEvent("loadCharacters", (chars: Character[]) => {
+    setCharacters(chars);
+    setVisible(true);
+    setShowCreate(false);
+  });
 
-    useNuiEvent('showCreateCharacter', () => {
-        setShowCreate(true);
-        setVisible(true);
-    });
+  useNuiEvent("showCreateCharacter", () => {
+    setShowCreate(true);
+    setVisible(true);
+  });
 
-    useNuiEvent('characterDeleted', (slotId: number) => {
-        const updated = characters.filter((char) => char.slot !== slotId);
-        setCharacters(updated);
-        setSelected(null);
-        setShowConfirm(false);
-        setPendingDeleteSlot(null);
-    });
+  useNuiEvent("characterDeleted", (cid: number) => {
+    const updated = characters.filter((char) => char.cid !== cid);
+    setCharacters(updated);
+    setSelected(null);
+    setShowConfirm(false);
+    setPendingDeleteCid(null);
+  });
 
-    const handleDeleteRequest = (slotId: number | null) => {
-        if (slotId !== null) {
-            setPendingDeleteSlot(slotId);
-            setShowConfirm(true);
-        }
-    };
+  const handleDeleteRequest = (cid: number | null) => {
+    if (cid !== null) {
+      setPendingDeleteCid(cid);
+      setShowConfirm(true);
+    }
+  };
 
-    const confirmDelete = () => {
-        if (pendingDeleteSlot !== null) {
-            fetchNui('flakey_multichar:deleteCharacter', { slotId: pendingDeleteSlot });
-            const updated = characters.filter((char) => char.slot !== pendingDeleteSlot);
-            setCharacters(updated);
-            setShowConfirm(false);
-            setPendingDeleteSlot(null);
-            setSelected(null);
-        }
-    };
+  const confirmDelete = () => {
+    if (pendingDeleteCid !== null) {
+      fetchNui("flakey_multichar:deleteCharacter", { cid: pendingDeleteCid });
+    }
+  };
 
-    const cancelDelete = () => {
-        setShowConfirm(false);
-        setPendingDeleteSlot(null);
-    };
+  const cancelDelete = () => {
+    setShowConfirm(false);
+    setPendingDeleteCid(null);
+  };
 
-    const selectCharacter = () => {
-        if (selected !== null) {
-            fetchNui('flakey_multichar:selectCharacter', { slot: selected });
-            setVisible(false);
-        }
-    };
+  const selectCharacter = () => {
+    if (selected !== null) {
+      fetchNui("flakey_multichar:selectCharacter", { cid: selected });
+      setVisible(false);
+    }
+  };
 
-    return (
-        visible && (
-            <div className='min-h-screen bg-gradient-to-b from-red-200 to-violet-300 text-white flex flex-col items-center p-8'>
-                <h1 className='text-4xl font-bold mb-6'>Select Your Character</h1>
-                {showCreate && <CreateCharacter onClose={() => setShowCreate(false)} />}
-                {showConfirm && (
-                    <ConfirmModal
-                        message='Are you sure you want to delete this character? This cannot be undone.'
-                        onConfirm={confirmDelete}
-                        onCancel={cancelDelete}
-                    />
-                )}
-                <div className='grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-5xl mb-6'>
-                    {characters.map((char) => (
-                        <div
-                            key={char.slot}
-                            onClick={() => setSelected(char.slot)}
-                            className={`p-4 rounded-sm border-2 border-dashed border-white cursor-pointer transition-all ${
-                                selected === char.slot
-                                    ? 'bg-violet-500/80'
-                                    : 'border-gray-700 bg-violet-500/30 hover:bg-violet-500/40'
-                            }`}
-                        >
-                            <h2 className='text-xl font-semibold'>{char.name}</h2>
-                            <p>DOB: {char.dob}</p>
-                            <p>Gender: {char.gender}</p>
-                            <p>Height: {char.height} cm</p>
-                        </div>
-                    ))}
+  return (
+    visible && (
+      <div className="flex h-screen text-white font-sans">
+        {/* Left Sidebar */}
+        <div className="w-1/4 p-4 bg-[#1f1f2b] border-r border-white/10 overflow-y-auto">
+          <h1 className="text-2xl font-bold mb-4">Characters</h1>
+          <div className="space-y-3">
+            {characters.map((char) => (
+              <div
+                key={char.cid}
+                onClick={() => {
+                  setSelected(char.cid);
+                  fetchNui("flakey_multichar:focusCharacter", {
+                    cid: char.cid,
+                  });
+                }}
+                className={`p-3 rounded-md cursor-pointer transition-all ${
+                  selected === char.cid
+                    ? "bg-violet-600 shadow-md"
+                    : "bg-violet-500/30 hover:bg-violet-500/50"
+                }`}
+              >
+                <h2 className="text-lg font-semibold">{char.name}</h2>
+                <p className="text-sm text-white/80">DOB: {char.dob}</p>
+                <p className="text-sm text-white/80">Gender: {char.gender}</p>
+                <p className="text-sm text-white/80">
+                  Height: {char.height} cm
+                </p>
+              </div>
+            ))}
 
-                    {characters.length < 6 && (
-                        <div
-                            onClick={() => setShowCreate(true)}
-                            className='p-4 rounded-sm border border-dashed border-white bg-violet-500/80 hover:bg-violet-500 text-center cursor-pointer'
-                        >
-                            <h2 className='text-xl font-bold'>+ Create New Character</h2>
-                        </div>
-                    )}
-                </div>
+            {characters.length < 6 && (
+              <div
+                onClick={() => setShowCreate(true)}
+                className="p-3 bg-green-600 hover:bg-green-700 text-center rounded-md font-semibold cursor-pointer"
+              >
+                + Create New Character
+              </div>
+            )}
+          </div>
+        </div>
 
-                <div className='flex gap-4'>
-                    <button
-                        onClick={selectCharacter}
-                        disabled={selected === null}
-                        className='font-bold uppercase border-2 hover:border-white/0 border-white hover:border-red-200 hover:text-red-200 border-dashed px-6 py-2 rounded-sm hover:bg-white cursor-pointer'
-                    >
-                        Select
-                    </button>
-                    <button
-                        onClick={() => handleDeleteRequest(selected)}
-                        disabled={selected === null}
-                        className='font-bold uppercase border-2 hover:border-white/0 border-white hover:border-red-200 hover:text-red-200 border-dashed px-6 py-2 rounded-sm hover:bg-white cursor-pointer'
-                    >
-                        Delete
-                    </button>
-                </div>
-            </div>
-        )
-    );
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col justify-center items-center px-12">
+          {showCreate && (
+            <CreateCharacter onClose={() => setShowCreate(false)} />
+          )}
+          {showConfirm && (
+            <ConfirmModal
+              message="Are you sure you want to delete this character? This cannot be undone."
+              onConfirm={confirmDelete}
+              onCancel={cancelDelete}
+            />
+          )}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold mb-4">Select Your Character</h1>
+            {selected !== null && (
+              <p className="text-white/70">
+                You have selected character ID: {selected}
+              </p>
+            )}
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              onClick={selectCharacter}
+              disabled={selected === null}
+              className={`px-6 py-2 rounded-md uppercase font-bold border-2 transition-all ${
+                selected === null
+                  ? "border-white/30 text-white/30 cursor-not-allowed"
+                  : "border-white hover:bg-white hover:text-black"
+              }`}
+            >
+              Select
+            </button>
+            <button
+              onClick={() => handleDeleteRequest(selected)}
+              disabled={selected === null}
+              className={`px-6 py-2 rounded-md uppercase font-bold border-2 transition-all ${
+                selected === null
+                  ? "border-white/30 text-white/30 cursor-not-allowed"
+                  : "border-red-400 hover:bg-red-600 hover:border-red-600"
+              }`}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  );
 };
 
 export default App;
