@@ -11,8 +11,9 @@ local function toggleNuiFrame(shouldShow)
             DestroyCam(cam, false)
             cam = nil
         end
-        for _, ped in pairs(CharacterList) do
-            if DoesEntityExist(ped) then DeletePed(ped) end
+        for _, entry in pairs(CharacterList) do
+            if entry.ped and DoesEntityExist(entry.ped) then DeletePed(entry.ped) end
+            if entry.veh and DoesEntityExist(entry.veh) then DeleteVehicle(entry.veh) end
         end
         CharacterList = {}
     end
@@ -47,13 +48,17 @@ end)
 
 RegisterNetEvent("flakey_multichar:characterDeleted", function(cid)
     SendReactMessage("characterDeleted", cid)
-    if CharacterList[cid] and DoesEntityExist(CharacterList[cid]) then
-        DeletePed(CharacterList[cid])
+
+    local entry = CharacterList[cid]
+    if entry then
+        if entry.ped and DoesEntityExist(entry.ped) then DeletePed(entry.ped) end
+        if entry.veh and DoesEntityExist(entry.veh) then DeleteVehicle(entry.veh) end
         CharacterList[cid] = nil
+
         if cam then
             local firstCid = next(CharacterList)
-            if firstCid and CharacterList[firstCid] then
-                local ped = CharacterList[firstCid]
+            if firstCid and CharacterList[firstCid] and CharacterList[firstCid].ped then
+                local ped = CharacterList[firstCid].ped
                 SetCamCoord(cam, GetOffsetFromEntityInWorldCoords(ped, 0.0, 2.0, 1.0))
                 PointCamAtEntity(cam, ped)
             else
@@ -83,52 +88,56 @@ RegisterNetEvent("flakey_multichar:loadCharacters", function(characters)
     toggleNuiFrame(true)
     SendReactMessage("loadCharacters", characters)
 
-    -- Clean up old peds
-    for _, ped in pairs(CharacterList) do
-        if DoesEntityExist(ped) then DeletePed(ped) end
+    -- Clean up
+    for _, entry in pairs(CharacterList) do
+        if entry.ped and DoesEntityExist(entry.ped) then DeletePed(entry.ped) end
+        if entry.veh and DoesEntityExist(entry.veh) then DeleteVehicle(entry.veh) end
     end
-
     CharacterList = {}
 
-    -- Change this to wherever you want them to stand (e.g., your interior)
-    local basePos = vector3(215.76, -810.12, 30.73)
-    local playerPed = PlayerPedId()
-    local heading = 160.0
-    local spacing = 2
+    local basePos = vector3(-1023.00, -1023.27, 4.04)
+    local basePositions = {
+        { veh = `seashark3`, coords = vector3(-2080.29, -900.60, 0.03) },
+        { veh = `cruiser`, coords = vector3(-1423.00, -1223.27, 4.04) },
+        { veh = `blazer`, coords = vector3(2515.70, 3602.36, 93.04) },
+        { veh = `manchez2`, coords = vector3(-191.86, 1539.42, 315.68) },
+        { veh = `suntrap`, coords = vector3(1202.58, 3901.34, 29.10) }
+    }
 
-    SetEntityCoords(playerPed, basePos.x, basePos.y, basePos.z)
+    local heading = 0.0
+
+    local playerPed = PlayerPedId()
+    SetEntityCoords(playerPed, basePos)
     SetEntityVisible(playerPed, false)
     SetEntityInvincible(playerPed, true)
     FreezeEntityPosition(playerPed, true)
 
-    local idleAnims = {
-        { dict = "amb@world_human_stand_mobile@male@text@idle_a", anim = "idle_a" },
-        { dict = "amb@world_human_stand_mobile@female@text@idle_a", anim = "idle_a" },
-    }
-
-    -- Load anim dicts once to avoid repeated loading
-    for _, anim in ipairs(idleAnims) do
-        RequestAnimDict(anim.dict)
-        while not HasAnimDictLoaded(anim.dict) do Wait(0) end
+    local shuffledPositions = {}
+    for i = 1, #basePositions do table.insert(shuffledPositions, basePositions[i]) end
+    for i = #shuffledPositions, 2, -1 do
+        local j = math.random(1, i)
+        shuffledPositions[i], shuffledPositions[j] = shuffledPositions[j], shuffledPositions[i]
     end
-
+    
     for i, char in ipairs(characters) do
+        local positionData = shuffledPositions[i] or shuffledPositions[1]
+        local vehModel = positionData.veh
+        local spawnCoords = positionData.coords
+
         local pedData = json.decode(char.ped)
         local model = tonumber(pedData.model)
 
         RequestModel(model)
         while not HasModelLoaded(model) do Wait(0) end
 
-        local offsetX = (i - 1) * spacing
-        local pos = basePos + vector3(offsetX, 0.0, 0.0)
-        local ped = CreatePed(4, model, pos.x, pos.y, pos.z, heading, false, true)
+        RequestModel(vehModel)
+        while not HasModelLoaded(vehModel) do Wait(0) end
 
-        local anim = idleAnims[(i % #idleAnims) + 1]
-        TaskPlayAnim(ped, anim.dict, anim.anim, 8.0, -8.0, -1, 1, 0, false, false, false)
+        local veh = CreateVehicle(vehModel, spawnCoords.x, spawnCoords.y, spawnCoords.z, heading, false, true)
+        SetEntityInvincible(veh, true)
+        SetEntityAsMissionEntity(veh, true, true)
 
-        SetEntityInvincible(ped, true)
-        FreezeEntityPosition(ped, true)
-        SetBlockingOfNonTemporaryEvents(ped, true)
+        local ped = CreatePedInsideVehicle(veh, 4, model, -1, false, true)
 
         for _, comp in ipairs(pedData.components or {}) do
             SetPedComponentVariation(ped, comp.component_id, comp.drawable_id, comp.texture_id, 0)
@@ -137,56 +146,59 @@ RegisterNetEvent("flakey_multichar:loadCharacters", function(characters)
             SetPedPropIndex(ped, prop.prop_id, prop.drawable_id, prop.texture_id, true)
         end
 
-        CharacterList[char.cid] = ped
+        SetBlockingOfNonTemporaryEvents(ped, true)
+        SetPedFleeAttributes(ped, 0, false)
+        SetPedCombatAttributes(ped, 17, true)
+        SetDriverAbility(ped, 1.0)
+        SetDriverAggressiveness(ped, 0.0)
+        SetPedKeepTask(ped, true)
+
+        TaskVehicleDriveWander(ped, veh, 10.0, 786468)
+
+        CharacterList[char.cid] = { ped = ped, veh = veh }
     end
 
-    -- Camera focus on first character
-    local firstCid = characters[1] and characters[1].cid
-    if firstCid and CharacterList[firstCid] then
-        local ped = CharacterList[firstCid]
-        if not cam then
-            cam = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
-            SetCamActive(cam, true)
-            RenderScriptCams(true, false, 0, true, true)
-        end
+    -- Top-down cam when characters first load
+    if not cam then
+        cam = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
 
-        local camOffset = GetOffsetFromEntityInWorldCoords(ped, 0.0, 2.0, 1.0)
-        SetCamCoord(cam, camOffset.x, camOffset.y, camOffset.z)
-        PointCamAtEntity(cam, ped)
+        local camFocus = basePos
+        local camHeight = 200.0
+        SetCamCoord(cam, camFocus.x, camFocus.y, camFocus.z + camHeight)
+        PointCamAtCoord(cam, camFocus.x, camFocus.y, camFocus.z)
+        SetCamRot(cam, -90.0, 0.0, 0.0)
+
+        SetCamActive(cam, true)
+        RenderScriptCams(true, false, 0, true, true)
     end
 end)
 
 RegisterNUICallback("flakey_multichar:focusCharacter", function(data, cb)
     local cid = data.cid
-    local ped = CharacterList[cid]
-    if ped and DoesEntityExist(ped) then
-        local camCoords = GetOffsetFromEntityInWorldCoords(ped, 0.0, 2.0, 1.0)
-
+    local entry = CharacterList[cid]
+    local playerPed = PlayerPedId()
+    if entry and entry.ped and entry.veh then
         if not cam then
             cam = CreateCam("DEFAULT_SCRIPTED_CAMERA", true)
             SetCamActive(cam, true)
             RenderScriptCams(true, false, 0, true, true)
         end
 
-        local fromPos = GetCamCoord(cam)
-        local toPos = camCoords
-        local duration = 500
-        local startTime = GetGameTimer()
-
         CreateThread(function()
-            while true do
-                local now = GetGameTimer()
-                local alpha = math.min(1.0, (now - startTime) / duration)
-                local x = fromPos.x + (toPos.x - fromPos.x) * alpha
-                local y = fromPos.y + (toPos.y - fromPos.y) * alpha
-                local z = fromPos.z + (toPos.z - fromPos.z) * alpha
-                SetCamCoord(cam, x, y, z)
-                PointCamAtEntity(cam, ped)
-
-                if alpha >= 1.0 then break end
+            while cam and DoesEntityExist(entry.ped) and DoesEntityExist(entry.veh) do
+                local camOffset = GetOffsetFromEntityInWorldCoords(entry.veh, 0.0, 4.0, 2.5)
+                SetCamCoord(cam, camOffset.x, camOffset.y, camOffset.z)
+                PointCamAtEntity(cam, entry.ped)
+                SetEntityCoords(playerPed, vector3(camOffset.x, camOffset.y, camOffset.z))
                 Wait(0)
             end
         end)
     end
+
     cb({ status = "ok" })
 end)
+
+RegisterCommand("coords", function()
+    local coords = GetEntityCoords(PlayerPedId())
+    print(("Current coordinates: x=%.2f, y=%.2f, z=%.2f"):format(coords.x, coords.y, coords.z))
+end, false)
