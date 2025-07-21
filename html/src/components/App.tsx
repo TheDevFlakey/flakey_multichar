@@ -63,7 +63,12 @@ const App: React.FC = () => {
 
   const selectCharacter = () => {
     if (selected !== null) {
-      fetchNui("flakey_multichar:selectCharacter", { cid: selected });
+      const charData = characters.find((char) => char.cid === selected);
+      const pos = charData.position;
+      fetchNui("flakey_multichar:selectCharacter", {
+        cid: selected,
+        position: pos,
+      });
       setVisible(false);
     }
   };

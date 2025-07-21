@@ -28,7 +28,7 @@ RegisterNUICallback("flakey_multichar:selectCharacter", function(data, cb)
     if cid then
         toggleNuiFrame(false)
         TriggerServerEvent("flakeyCore:selectCharacter", cid)
-        TriggerEvent("flakey_spawnselector:openSpawnSelector")
+        TriggerEvent("flakey_spawnselector:openSpawnSelector", data.position)
         cb({ status = "ok" })
     else
         cb({ status = "error", message = "Invalid CID selected" })
